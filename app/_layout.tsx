@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { initDatabase, seedDatabaseIfEmpty } from "@/database/init";
+import { AuthProvider } from "@/store/AuthContext";
 
 export default function RootLayout() {
   const [isDbReady, setIsDbReady] = useState(false);
@@ -38,7 +39,11 @@ export default function RootLayout() {
     );
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AuthProvider>
+  );
 }
 
 const styles = StyleSheet.create({

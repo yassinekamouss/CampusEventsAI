@@ -12,10 +12,12 @@ import {
   Text,
   TextInput,
   View,
+  TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { addEvent, getEventById, updateEvent } from "@/database/events";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 
 type Category = "Workshop" | "Talk" | "Club";
 
@@ -30,18 +32,9 @@ function parseDate(value: string) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function categoryColors(category: Category) {
-  switch (category) {
-    case "Workshop":
-      return { bg: "#e8fff2", fg: "#0f7a3d", border: "#bff1d2" };
-    case "Talk":
-      return { bg: "#f1e9ff", fg: "#5b21b6", border: "#dccbff" };
-    case "Club":
-      return { bg: "#e8f4ff", fg: "#075985", border: "#cbe6ff" };
-  }
-}
-
 export default function CreateOrEditEvent() {
+  const insets = useSafeAreaInsets();
+  const theme = Colors.light;
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const rawId = params.id;
   const eventId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -52,10 +45,6 @@ export default function CreateOrEditEvent() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  const touch = (key: string) => {
-    setTouched((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
-  };
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -68,18 +57,14 @@ export default function CreateOrEditEvent() {
   const [capacity, setCapacity] = useState("");
   const [tags, setTags] = useState("");
 
+  const touch = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
+
   useEffect(() => {
-    if (!isEdit || typeof eventId !== "string") return;
-
-    let cancelled = false;
+    if (!isEdit) return;
     (async () => {
-      setLoadError(null);
-      setIsLoading(true);
       try {
-        const row = await getEventById(eventId);
+        const row = await getEventById(eventId!);
         if (!row) throw new Error("Event not found");
-
-        if (cancelled) return;
         setTitle(row.title);
         setDescription(row.description);
         setCategory((row.category as Category) ?? "Workshop");
@@ -89,544 +74,246 @@ export default function CreateOrEditEvent() {
         setLocationAddress(row.locationAddress ?? "");
         setOrganizerName(row.organizerName);
         setCapacity(row.capacity == null ? "" : String(row.capacity));
-
         try {
-          const parsed = row.tags ? (JSON.parse(row.tags) as unknown) : [];
-          const list = Array.isArray(parsed)
-            ? parsed.filter((t) => typeof t === "string")
-            : [];
-          setTags(list.join(", "));
-        } catch {
-          setTags("");
-        }
+          const parsed = row.tags ? JSON.parse(row.tags) : [];
+          setTags(Array.isArray(parsed) ? parsed.join(", ") : "");
+        } catch { setTags(""); }
       } catch (e) {
-        console.error("Failed to load event:", e);
-        if (!cancelled) setLoadError("Impossible de charger l'événement.");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
+        setLoadError("Impossible de charger l'événement.");
+      } finally { setIsLoading(false); }
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, [eventId, isEdit]);
 
   const validation = useMemo(() => {
     const errors: Record<string, string> = {};
-
-    if (title.trim().length === 0) errors.title = "Le titre est obligatoire.";
-    if (description.trim().length === 0)
-      errors.description = "La description est obligatoire.";
-    if (!category) errors.category = "La catégorie est obligatoire.";
-    if (startDateTime.trim().length === 0) {
-      errors.startDateTime = "La date/heure de début est obligatoire.";
-    } else if (!parseDate(startDateTime)) {
-      errors.startDateTime = "Format de date invalide (ISO 8601 recommandé).";
-    }
-
-    if (locationName.trim().length === 0)
-      errors.locationName = "Le lieu est obligatoire.";
-    if (organizerName.trim().length === 0)
-      errors.organizerName = "L'organisateur est obligatoire.";
-
-    if (!isPositiveInt(capacity)) {
-      errors.capacity = "La capacité doit être un entier positif.";
-    }
-
-    const start =
-      startDateTime.trim().length > 0 ? parseDate(startDateTime) : null;
-    const end = endDateTime.trim().length > 0 ? parseDate(endDateTime) : null;
-
-    if (endDateTime.trim().length > 0 && !end) {
-      errors.endDateTime = "Format de date de fin invalide.";
-    }
-
-    if (start && end && end.getTime() <= start.getTime()) {
-      errors.endDateTime =
-        "La date de fin doit être postérieure à la date de début.";
-    }
-
-    return {
-      errors,
-      isValid: Object.keys(errors).length === 0,
-    };
-  }, [
-    title,
-    description,
-    category,
-    startDateTime,
-    endDateTime,
-    locationName,
-    organizerName,
-    capacity,
-  ]);
-
-  const canSave = validation.isValid && !isSaving && !isLoading;
+    if (!title.trim()) errors.title = "Titre obligatoire";
+    if (!description.trim()) errors.description = "Description obligatoire";
+    if (!startDateTime.trim() || !parseDate(startDateTime)) errors.startDateTime = "Date invalide (ISO)";
+    if (!locationName.trim()) errors.locationName = "Lieu obligatoire";
+    if (!organizerName.trim()) errors.organizerName = "Organisateur obligatoire";
+    if (!isPositiveInt(capacity)) errors.capacity = "Doit être un entier positif";
+    return { errors, isValid: Object.keys(errors).length === 0 };
+  }, [title, description, startDateTime, locationName, organizerName, capacity]);
 
   const onSave = async () => {
     setSubmitAttempted(true);
     if (!validation.isValid) return;
-
-    const tagsArray = tags
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    const capacityValue =
-      capacity.trim().length === 0 ? null : Number(capacity);
-
     setIsSaving(true);
     try {
-      if (isEdit) {
-        if (typeof eventId !== "string") return;
-
-        await updateEvent(eventId, {
-          title: title.trim(),
-          description: description.trim(),
-          category,
-          startDateTime: startDateTime.trim(),
-          endDateTime:
-            endDateTime.trim().length === 0 ? null : endDateTime.trim(),
-          locationName: locationName.trim(),
-          locationAddress:
-            locationAddress.trim().length === 0 ? null : locationAddress.trim(),
-          organizerName: organizerName.trim(),
-          capacity: capacityValue,
-          tags: tagsArray.length === 0 ? null : tagsArray,
-        });
-      } else {
-        await addEvent({
-          title: title.trim(),
-          description: description.trim(),
-          category,
-          startDateTime: startDateTime.trim(),
-          endDateTime:
-            endDateTime.trim().length === 0 ? null : endDateTime.trim(),
-          locationName: locationName.trim(),
-          locationAddress:
-            locationAddress.trim().length === 0 ? null : locationAddress.trim(),
-          organizerName: organizerName.trim(),
-          capacity: capacityValue,
-          tags: tagsArray.length === 0 ? null : tagsArray,
-        });
-      }
-
+      const tagsArray = tags.split(",").map((t) => t.trim()).filter(Boolean);
+      const payload = {
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        startDateTime: startDateTime.trim(),
+        endDateTime: endDateTime.trim() || null,
+        locationName: locationName.trim(),
+        locationAddress: locationAddress.trim() || null,
+        organizerName: organizerName.trim(),
+        capacity: capacity.trim() ? Number(capacity) : null,
+        tags: tagsArray.length ? tagsArray : null,
+      };
+      if (isEdit) await updateEvent(eventId!, payload);
+      else await addEvent(payload);
       router.back();
     } catch (e) {
-      console.error("Save failed:", e);
       Alert.alert("Erreur", "Enregistrement impossible.");
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   };
 
-  const show = (key: string) => {
-    if (!submitAttempted && !touched[key]) return null;
-    return validation.errors[key] ?? null;
-  };
+  const showError = (key: string) => (submitAttempted || touched[key]) && validation.errors[key];
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.topbar}>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && styles.backBtnPressed,
-            ]}>
-            <View style={styles.backInner}>
-              <Ionicons name="arrow-back-outline" size={16} color="#0F172A" />
-              <Text style={styles.backText}>Retour</Text>
-            </View>
-          </Pressable>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="close" size={24} color={theme.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{isEdit ? "Modifier" : "Nouvel événement"}</Text>
+        <TouchableOpacity onPress={onSave} disabled={isSaving} style={styles.saveNavButton}>
+          {isSaving ? <ActivityIndicator size="small" color={theme.accent} /> : <Text style={styles.saveNavText}>Publier</Text>}
+        </TouchableOpacity>
+      </View>
 
-          <Text style={styles.topTitle}>
-            {isEdit ? "Modifier" : "Créer"} un événement
-          </Text>
-
-          <View style={{ width: 72 }} />
-        </View>
-
-        {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator />
-            <Text style={styles.muted}>Chargement…</Text>
-          </View>
-        ) : loadError ? (
-          <View style={styles.center}>
-            <Text style={styles.error}>{loadError}</Text>
-          </View>
-        ) : (
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.content}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Titre *</Text>
-              <TextInput
-                value={title}
-                onChangeText={(v) => {
-                  touch("title");
-                  setTitle(v);
-                }}
-                style={styles.input}
-                placeholder="Ex: Workshop React Native"
-              />
-              {show("title") ? (
-                <Text style={styles.error}>{show("title")}</Text>
-              ) : null}
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Description *</Text>
-              <TextInput
-                value={description}
-                onChangeText={(v) => {
-                  touch("description");
-                  setDescription(v);
-                }}
-                style={[styles.input, styles.textarea]}
-                placeholder="Décrivez l'événement..."
-                multiline
-              />
-              {show("description") ? (
-                <Text style={styles.error}>{show("description")}</Text>
-              ) : null}
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Catégorie *</Text>
-              <View style={styles.categoryRow}>
-                {(["Workshop", "Talk", "Club"] as const).map((c) => {
-                  const colors = categoryColors(c);
-                  const selected = category === c;
-                  return (
-                    <Pressable
-                      key={c}
-                      onPress={() => {
-                        touch("category");
-                        setCategory(c);
-                      }}
-                      style={({ pressed }) => [
-                        styles.categoryPill,
-                        {
-                          backgroundColor: selected ? colors.bg : "#ffffff",
-                          borderColor: selected ? colors.border : "#dbe2ee",
-                        },
-                        pressed && styles.pressed,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.categoryText,
-                          { color: selected ? colors.fg : "#111827" },
-                        ]}>
-                        {c}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {show("category") ? (
-                <Text style={styles.error}>{show("category")}</Text>
-              ) : null}
-            </View>
-
-            <View style={styles.grid2}>
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Début (ISO) *</Text>
-                <TextInput
-                  value={startDateTime}
-                  onChangeText={(v) => {
-                    touch("startDateTime");
-                    setStartDateTime(v);
-                  }}
-                  style={styles.input}
-                  placeholder="2026-04-30T14:00:00.000Z"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {show("startDateTime") ? (
-                  <Text style={styles.error}>{show("startDateTime")}</Text>
-                ) : null}
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.flex}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {isLoading ? (
+            <ActivityIndicator style={styles.loader} color={theme.primary} />
+          ) : loadError ? (
+            <Text style={styles.errorText}>{loadError}</Text>
+          ) : (
+            <View style={styles.form}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Titre</Text>
+                <TextInput value={title} onChangeText={(v) => { touch("title"); setTitle(v); }} style={[styles.input, showError("title") && styles.inputError]} placeholder="Ex: Conférence IA" placeholderTextColor={theme.textMuted} />
+                {showError("title") && <Text style={styles.fieldError}>{validation.errors.title}</Text>}
               </View>
 
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Fin (ISO)</Text>
-                <TextInput
-                  value={endDateTime}
-                  onChangeText={(v) => {
-                    touch("endDateTime");
-                    setEndDateTime(v);
-                  }}
-                  style={styles.input}
-                  placeholder="Optionnel"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {show("endDateTime") ? (
-                  <Text style={styles.error}>{show("endDateTime")}</Text>
-                ) : null}
-              </View>
-            </View>
-
-            <View style={styles.grid2}>
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Lieu *</Text>
-                <TextInput
-                  value={locationName}
-                  onChangeText={(v) => {
-                    touch("locationName");
-                    setLocationName(v);
-                  }}
-                  style={styles.input}
-                  placeholder="Ex: Amphi A"
-                />
-                {show("locationName") ? (
-                  <Text style={styles.error}>{show("locationName")}</Text>
-                ) : null}
+              <View style={styles.field}>
+                <Text style={styles.label}>Description</Text>
+                <TextInput value={description} onChangeText={(v) => { touch("description"); setDescription(v); }} style={[styles.input, styles.textarea, showError("description") && styles.inputError]} placeholder="Détails de l'événement..." placeholderTextColor={theme.textMuted} multiline />
+                {showError("description") && <Text style={styles.fieldError}>{validation.errors.description}</Text>}
               </View>
 
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Adresse</Text>
-                <TextInput
-                  value={locationAddress}
-                  onChangeText={(v) => {
-                    touch("locationAddress");
-                    setLocationAddress(v);
-                  }}
-                  style={styles.input}
-                  placeholder="Optionnel"
-                />
-              </View>
-            </View>
-
-            <View style={styles.grid2}>
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Organisateur *</Text>
-                <TextInput
-                  value={organizerName}
-                  onChangeText={(v) => {
-                    touch("organizerName");
-                    setOrganizerName(v);
-                  }}
-                  style={styles.input}
-                  placeholder="Ex: Département Informatique"
-                />
-                {show("organizerName") ? (
-                  <Text style={styles.error}>{show("organizerName")}</Text>
-                ) : null}
-              </View>
-
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Capacité</Text>
-                <TextInput
-                  value={capacity}
-                  onChangeText={(v) => {
-                    touch("capacity");
-                    setCapacity(v);
-                  }}
-                  style={styles.input}
-                  placeholder="Ex: 40"
-                  keyboardType="number-pad"
-                />
-                {show("capacity") ? (
-                  <Text style={styles.error}>{show("capacity")}</Text>
-                ) : null}
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Tags</Text>
-              <TextInput
-                value={tags}
-                onChangeText={(v) => {
-                  touch("tags");
-                  setTags(v);
-                }}
-                style={styles.input}
-                placeholder="Ex: react, mobile, expo"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <Text style={styles.hint}>
-                Séparez les tags par des virgules.
-              </Text>
-            </View>
-
-            <Pressable
-              onPress={onSave}
-              disabled={!canSave}
-              style={({ pressed }) => [
-                styles.saveBtn,
-                !canSave && styles.saveBtnDisabled,
-                pressed && canSave && styles.saveBtnPressed,
-              ]}>
-              {isSaving ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <View style={styles.saveInner}>
-                  <Ionicons name="save-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.saveText}>Enregistrer</Text>
+              <View style={styles.field}>
+                <Text style={styles.label}>Catégorie</Text>
+                <View style={styles.categoryRow}>
+                  {(["Workshop", "Talk", "Club"] as const).map((c) => (
+                    <TouchableOpacity key={c} onPress={() => setCategory(c)} style={[styles.categoryChip, category === c && styles.categoryChipSelected]}>
+                      <Text style={[styles.categoryChipText, category === c && styles.categoryChipTextSelected]}>{c}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-            </Pressable>
+              </View>
 
-            {!validation.isValid && submitAttempted ? (
-              <Text style={styles.footerError}>
-                Corrigez les champs en erreur avant d&apos;enregistrer.
-              </Text>
-            ) : null}
-          </ScrollView>
-        )}
+              <View style={styles.row}>
+                <View style={[styles.field, styles.flex]}>
+                  <Text style={styles.label}>Début (ISO)</Text>
+                  <TextInput value={startDateTime} onChangeText={(v) => { touch("startDateTime"); setStartDateTime(v); }} style={[styles.input, showError("startDateTime") && styles.inputError]} placeholder="2026-04-30T14:00Z" autoCapitalize="none" />
+                </View>
+                <View style={[styles.field, styles.flex]}>
+                  <Text style={styles.label}>Fin (ISO)</Text>
+                  <TextInput value={endDateTime} onChangeText={setEndDateTime} style={styles.input} placeholder="Optionnel" autoCapitalize="none" />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Lieu</Text>
+                <TextInput value={locationName} onChangeText={(v) => { touch("locationName"); setLocationName(v); }} style={[styles.input, showError("locationName") && styles.inputError]} placeholder="Amphi B" />
+              </View>
+
+              <View style={styles.row}>
+                <View style={[styles.field, styles.flex]}>
+                  <Text style={styles.label}>Organisateur</Text>
+                  <TextInput value={organizerName} onChangeText={(v) => { touch("organizerName"); setOrganizerName(v); }} style={[styles.input, showError("organizerName") && styles.inputError]} placeholder="Département Tech" />
+                </View>
+                <View style={[styles.field, { width: 100 }]}>
+                  <Text style={styles.label}>Places</Text>
+                  <TextInput value={capacity} onChangeText={setCapacity} style={styles.input} placeholder="∞" keyboardType="number-pad" />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Tags</Text>
+                <TextInput value={tags} onChangeText={setTags} style={styles.input} placeholder="react, mobile, design" autoCapitalize="none" />
+              </View>
+            </View>
+          )}
+        </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  flex: { flex: 1 },
+  container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.light.background,
   },
-  topbar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    backgroundColor: "#F8FAFC",
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: Colors.light.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    minHeight: 52,
   },
-  topTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  backBtn: {
-    height: 34,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#ffffff",
+  backButton: {
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
-  backInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  backBtnPressed: {
-    opacity: 0.9,
-  },
-  backText: {
-    fontSize: 13,
+  headerTitle: {
+    fontSize: 17,
     fontWeight: "700",
-    color: "#0F172A",
+    color: Colors.light.text,
   },
-  content: {
-    padding: 16,
-    paddingBottom: 28,
-    gap: 14,
+  saveNavButton: {
+    width: 60,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveNavText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.light.accent,
+  },
+  scrollContent: {
+    padding: Spacing.md,
+  },
+  loader: {
+    marginTop: Spacing.xl,
+  },
+  form: {
+    gap: Spacing.lg,
   },
   field: {
-    gap: 8,
+    gap: Spacing.xs,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0F172A",
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.light.text,
   },
   input: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: Colors.light.surface,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
     fontSize: 15,
-    color: "#0F172A",
+    color: Colors.light.text,
+  },
+  inputError: {
+    borderColor: Colors.light.error,
+  },
+  fieldError: {
+    fontSize: 12,
+    color: Colors.light.error,
+    fontWeight: "500",
   },
   textarea: {
-    minHeight: 110,
+    minHeight: 100,
     textAlignVertical: "top",
-  },
-  hint: {
-    fontSize: 12,
-    color: "#64748B",
-  },
-  error: {
-    fontSize: 12,
-    color: "#EF4444",
-  },
-  footerError: {
-    fontSize: 12,
-    color: "#EF4444",
-    textAlign: "center",
-    marginTop: 4,
-  },
-  grid2: {
-    flexDirection: "row",
-    gap: 12,
   },
   categoryRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: Spacing.xs,
   },
-  categoryPill: {
-    flex: 1,
-    height: 42,
-    borderRadius: 8,
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: Colors.light.border,
+    backgroundColor: Colors.light.surface,
   },
-  categoryText: {
+  categoryChipSelected: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  categoryChipText: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "600",
+    color: Colors.light.text,
   },
-  pressed: {
-    opacity: 0.92,
+  categoryChipTextSelected: {
+    color: "#FFFFFF",
   },
-  saveBtn: {
-    marginTop: 8,
-    height: 46,
-    borderRadius: 8,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  saveInner: {
+  row: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    gap: Spacing.md,
   },
-  saveBtnPressed: {
-    opacity: 0.92,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-  muted: {
-    fontSize: 13,
-    color: "#64748B",
+  errorText: {
+    color: Colors.light.error,
     textAlign: "center",
+    marginTop: Spacing.xl,
   },
 });

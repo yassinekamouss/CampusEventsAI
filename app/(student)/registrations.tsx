@@ -10,14 +10,28 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EventRow } from "@/database/events";
 import { getRegistrations } from "@/database/registrations";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 
 const STUDENT_USER_ID = "etudiant@campus.ma";
 
+function formatDateTime(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function RegistrationsScreen() {
+  const insets = useSafeAreaInsets();
+  const theme = Colors.light;
   const [events, setEvents] = useState<EventRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,35 +50,39 @@ export default function RegistrationsScreen() {
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
-    <SafeAreaView style={styles.screen} edges={["bottom", "left", "right"]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <Text style={styles.headerTitle}>Inscriptions</Text>
+      </View>
+
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
-          <Text style={styles.muted}>Chargement...</Text>
+          <ActivityIndicator color={theme.primary} />
         </View>
       ) : error ? (
         <View style={styles.center}>
-          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <Pressable onPress={load} style={styles.retryButton}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
           </Pressable>
         </View>
       ) : events.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.muted}>Aucune inscription pour le moment.</Text>
+          <Ionicons name="ticket-outline" size={48} color={theme.border} />
+          <Text style={styles.emptyText}>Aucune inscription active.</Text>
+          <Pressable onPress={() => router.push("/(student)")} style={styles.exploreButton}>
+            <Text style={styles.exploreButtonText}>Explorer le catalogue</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
           data={events}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + Spacing.lg }]}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <Pressable
               onPress={() =>
@@ -74,92 +92,136 @@ export default function RegistrationsScreen() {
                 })
               }
               style={({ pressed }) => [
-                styles.card,
-                pressed && styles.cardPressed,
+                styles.eventCard,
+                pressed && styles.eventCardPressed,
               ]}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <View style={styles.metaRow}>
-                <Ionicons name="location-outline" size={15} color="#64748B" />
-                <Text style={styles.cardMeta}>{item.locationName}</Text>
+              <View style={styles.cardHeader}>
+                <View style={styles.statusRow}>
+                  <Ionicons name="checkmark-circle" size={14} color={theme.success} />
+                  <Text style={styles.statusText}>Inscrit</Text>
+                </View>
+                <Text style={styles.eventDate}>{formatDateTime(item.startDateTime)}</Text>
+              </View>
+              <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
+              <View style={styles.cardFooter}>
+                <Ionicons name="location-outline" size={14} color={theme.textMuted} />
+                <Text style={styles.eventLocation} numberOfLines={1}>{item.locationName}</Text>
               </View>
             </Pressable>
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.light.background,
+  },
+  header: {
+    backgroundColor: Colors.light.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.light.text,
+  },
+  listContent: {
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  eventCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  eventCardPressed: {
+    backgroundColor: Colors.light.primaryLight,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.light.success,
+    textTransform: "uppercase",
+  },
+  eventDate: {
+    fontSize: 12,
+    color: Colors.light.textMuted,
+    fontWeight: "500",
+  },
+  eventTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: Colors.light.text,
+    lineHeight: 22,
+    marginBottom: Spacing.sm,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  eventLocation: {
+    fontSize: 13,
+    color: Colors.light.textMuted,
   },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
-    gap: 8,
+    padding: Spacing.xl,
   },
-  muted: {
-    color: "#64748b",
+  errorText: {
     fontSize: 14,
-  },
-  error: {
-    color: "#EF4444",
-    fontSize: 14,
-    textAlign: "center",
+    color: Colors.light.error,
+    marginBottom: Spacing.md,
   },
   retryButton: {
-    marginTop: 8,
-    height: 38,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  emptyText: {
+    fontSize: 15,
+    color: Colors.light.textMuted,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  exploreButton: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: Colors.light.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
-  retryText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  listContent: {
-    padding: 16,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 16,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  cardMeta: {
-    color: "#64748b",
-    fontSize: 13,
-    flex: 1,
-  },
-  metaRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  exploreButtonText: {
+    color: Colors.light.primary,
+    fontWeight: "600",
   },
 });

@@ -15,7 +15,7 @@ export default function AdminLayout() {
   }
 
   if (userRole !== "admin") {
-    return <Redirect href="/" />;
+    return <Redirect href="/login" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

@@ -5,27 +5,70 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#171717', // Neutral 900
+    textMuted: '#737373', // Neutral 500
+    background: '#FFFFFF',
+    surface: '#FFFFFF',
+    primary: '#000000', // Black for a high-end feel
+    primaryLight: '#F5F5F5',
+    accent: '#2563EB', // Blue 600 for intentional actions
+    border: '#E5E5E5', // Neutral 200
+    success: '#16A34A',
+    error: '#DC2626',
+    icon: '#A3A3A3', // Neutral 400
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#F5F5F5',
+    textMuted: '#A3A3A3',
+    background: '#0A0A0A',
+    surface: '#171717',
+    primary: '#FFFFFF',
+    primaryLight: '#262626',
+    accent: '#3B82F6',
+    border: '#262626',
+    success: '#22C55E',
+    error: '#EF4444',
+    icon: '#525252',
   },
 };
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const BorderRadius = {
+  xs: 4,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  full: 999,
+};
+
+export const Shadows = {
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  subtle: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+};
+
+
 
 export const Fonts = Platform.select({
   ios: {

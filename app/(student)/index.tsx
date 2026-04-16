@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -12,9 +13,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { EventRow, getAllEvents } from "@/database/events";
+import { useAuth } from "@/store/AuthContext";
 
 const CATEGORIES = [
   "Tous",
@@ -30,7 +33,6 @@ function formatDateTime(iso: string) {
   if (Number.isNaN(d.getTime())) return iso;
   try {
     return d.toLocaleString("fr-FR", {
-      weekday: "short",
       day: "2-digit",
       month: "short",
       hour: "2-digit",
@@ -41,20 +43,10 @@ function formatDateTime(iso: string) {
   }
 }
 
-function categoryColors(category: string) {
-  switch (category) {
-    case "Workshop":
-      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
-    case "Talk":
-      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
-    case "Club":
-      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
-    default:
-      return { bg: "#EFF6FF", fg: "#2563EB", border: "#DBEAFE" };
-  }
-}
-
 export default function StudentIndex() {
+  const insets = useSafeAreaInsets();
+  const theme = Colors.light;
+  const { logout } = useAuth();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] =
@@ -91,43 +83,78 @@ export default function StudentIndex() {
 
       const matchesTitle =
         searchTerm.length === 0 ||
-        event.title.trim().toLocaleLowerCase() === searchTerm;
+        event.title.trim().toLocaleLowerCase().includes(searchTerm);
 
       return matchesCategory && matchesTitle;
     });
   }, [events, search, selectedCategory]);
 
+  const onLogout = useCallback(() => {
+    Alert.alert("Déconnexion", "Voulez-vous vraiment vous déconnecter ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Se déconnecter",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+        },
+      },
+    ]);
+  }, [logout]);
+
   return (
-    <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
-      <View style={styles.headerBlock}>
-        <Text style={styles.title}>Catalogue des événements</Text>
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Recherche exacte du titre"
-          placeholderTextColor="#94a3b8"
-          style={styles.searchInput}
-        />
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerTop}>
+          <Text style={styles.headerTitle}>Événements</Text>
+          <View style={styles.headerActions}>
+            <Pressable style={styles.iconButton}>
+              <Ionicons
+                name="notifications-outline"
+                size={22}
+                color={theme.text}
+              />
+            </Pressable>
+            <Pressable onPress={onLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={20} color={theme.error} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.searchBar}>
+          <Ionicons
+            name="search"
+            size={18}
+            color={theme.textMuted}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Rechercher..."
+            placeholderTextColor={theme.textMuted}
+            style={styles.searchInput}
+          />
+        </View>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}>
+          contentContainerStyle={styles.categoriesRow}>
           {CATEGORIES.map((category) => {
             const selected = selectedCategory === category;
             return (
               <Pressable
                 key={category}
                 onPress={() => setSelectedCategory(category)}
-                style={({ pressed }) => [
-                  styles.chip,
-                  selected && styles.chipSelected,
-                  pressed && styles.chipPressed,
+                style={[
+                  styles.categoryChip,
+                  selected && styles.categoryChipSelected,
                 ]}>
                 <Text
                   style={[
-                    styles.chipLabel,
-                    selected && styles.chipLabelSelected,
+                    styles.categoryText,
+                    selected && styles.categoryTextSelected,
                   ]}>
                   {category}
                 </Text>
@@ -139,243 +166,229 @@ export default function StudentIndex() {
 
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
-          <Text style={styles.muted}>Chargement…</Text>
+          <ActivityIndicator color={theme.primary} />
         </View>
       ) : error ? (
         <View style={styles.center}>
-          <Text style={styles.error}>{error}</Text>
-          <Pressable
-            onPress={load}
-            style={({ pressed }) => [
-              styles.retryButton,
-              pressed && styles.retryButtonPressed,
-            ]}>
-            <Text style={styles.retryText}>Réessayer</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <Pressable onPress={load} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
           </Pressable>
         </View>
       ) : filteredEvents.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyTitle}>Aucun événement</Text>
-          <Text style={styles.muted}>Aucun résultat pour ce filtre.</Text>
+          <Ionicons name="calendar-outline" size={48} color={theme.border} />
+          <Text style={styles.emptyText}>Aucun événement trouvé.</Text>
         </View>
       ) : (
         <FlatList
           data={filteredEvents}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => {
-            const badge = categoryColors(item.category);
-            return (
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/(student)/event/[id]",
-                    params: { id: item.id },
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.card,
-                  pressed && styles.cardPressed,
-                ]}>
-                <View style={styles.cardTop}>
-                  <Text style={styles.cardTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <View
-                    style={[
-                      styles.badge,
-                      {
-                        backgroundColor: badge.bg,
-                        borderColor: badge.border,
-                      },
-                    ]}>
-                    <Text style={[styles.badgeText, { color: badge.fg }]}>
-                      {item.category}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <Ionicons name="time-outline" size={15} color="#64748B" />
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {formatDateTime(item.startDateTime)}
-                  </Text>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <Ionicons name="location-outline" size={15} color="#64748B" />
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {item.locationName}
-                  </Text>
-                </View>
-
-                <Text style={styles.linkLabel}>Voir les détails</Text>
-              </Pressable>
-            );
-          }}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + Spacing.lg },
+          ]}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/(student)/event/[id]",
+                  params: { id: item.id },
+                })
+              }
+              style={({ pressed }) => [
+                styles.eventCard,
+                pressed && styles.eventCardPressed,
+              ]}>
+              <View style={styles.eventCardHeader}>
+                <Text style={styles.eventCategory}>{item.category}</Text>
+                <Text style={styles.eventDate}>
+                  {formatDateTime(item.startDateTime)}
+                </Text>
+              </View>
+              <Text style={styles.eventTitle} numberOfLines={2}>
+                {item.title}
+              </Text>
+              <View style={styles.eventFooter}>
+                <Ionicons
+                  name="location-outline"
+                  size={14}
+                  color={theme.textMuted}
+                />
+                <Text style={styles.eventLocation} numberOfLines={1}>
+                  {item.locationName}
+                </Text>
+              </View>
+            </Pressable>
+          )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.light.background,
   },
-  headerBlock: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 10,
+  header: {
+    backgroundColor: Colors.light.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    gap: 10,
+    borderBottomColor: Colors.light.border,
+    paddingBottom: Spacing.sm,
   },
-  title: {
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    minHeight: 52,
+  },
+  headerTitle: {
     fontSize: 20,
-    fontWeight: "800",
-    color: "#0F172A",
+    fontWeight: "700",
+    color: Colors.light.text,
   },
-  searchInput: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    backgroundColor: "#F1F5F9",
-    fontSize: 14,
-    color: "#0F172A",
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
-  chipsRow: {
-    gap: 8,
-    paddingRight: 16,
-  },
-  chip: {
-    height: 34,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#ffffff",
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
   },
-  chipSelected: {
-    borderColor: "#2563EB",
-    backgroundColor: "#DBEAFE",
+  logoutButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.primaryLight,
   },
-  chipPressed: {
-    opacity: 0.8,
-  },
-  chipLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
-  },
-  chipLabelSelected: {
-    color: "#2563EB",
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 28,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.07,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 22,
-    elevation: 4,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  cardTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  metaRow: {
-    marginTop: 9,
+  searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    backgroundColor: Colors.light.primaryLight,
+    marginHorizontal: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    height: 40,
+    marginBottom: Spacing.sm,
   },
-  meta: {
-    fontSize: 13,
-    color: "#64748B",
+  searchIcon: {
+    marginRight: Spacing.xs,
+  },
+  searchInput: {
     flex: 1,
+    fontSize: 15,
+    color: Colors.light.text,
   },
-  linkLabel: {
-    marginTop: 10,
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#2563EB",
+  categoriesRow: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.xs,
   },
-  badge: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
+  categoryChip: {
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
   },
-  badgeText: {
-    fontSize: 12,
+  categoryChipSelected: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  categoryText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.light.textMuted,
+  },
+  categoryTextSelected: {
+    color: "#FFFFFF",
+  },
+  listContent: {
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  eventCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  eventCardPressed: {
+    backgroundColor: Colors.light.primaryLight,
+  },
+  eventCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  eventCategory: {
+    fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 0.2,
+    color: Colors.light.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  eventDate: {
+    fontSize: 12,
+    color: Colors.light.textMuted,
+    fontWeight: "500",
+  },
+  eventTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: Colors.light.text,
+    lineHeight: 22,
+    marginBottom: Spacing.sm,
+  },
+  eventFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  eventLocation: {
+    fontSize: 13,
+    color: Colors.light.textMuted,
+    fontWeight: "400",
   },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    gap: 10,
+    padding: Spacing.xl,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0F172A",
-    textAlign: "center",
-  },
-  muted: {
-    fontSize: 13,
-    color: "#64748B",
-    textAlign: "center",
-  },
-  error: {
-    fontSize: 13,
-    color: "#EF4444",
+  errorText: {
+    fontSize: 14,
+    color: Colors.light.error,
+    marginBottom: Spacing.md,
     textAlign: "center",
   },
   retryButton: {
-    height: 40,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
-  retryButtonPressed: {
-    opacity: 0.9,
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
-  retryText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0F172A",
+  emptyText: {
+    fontSize: 15,
+    color: Colors.light.textMuted,
+    marginTop: Spacing.sm,
   },
 });

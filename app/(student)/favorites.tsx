@@ -10,14 +10,17 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EventRow } from "@/database/events";
 import { getFavorites } from "@/database/favorites";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 
 const STUDENT_USER_ID = "etudiant@campus.ma";
 
 export default function FavoritesScreen() {
+  const insets = useSafeAreaInsets();
+  const theme = Colors.light;
   const [events, setEvents] = useState<EventRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,35 +39,36 @@ export default function FavoritesScreen() {
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
-    <SafeAreaView style={styles.screen} edges={["bottom", "left", "right"]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <Text style={styles.headerTitle}>Favoris</Text>
+      </View>
+
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
-          <Text style={styles.muted}>Chargement...</Text>
+          <ActivityIndicator color={theme.primary} />
         </View>
       ) : error ? (
         <View style={styles.center}>
-          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <Pressable onPress={load} style={styles.retryButton}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
           </Pressable>
         </View>
       ) : events.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.muted}>Aucun événement favori.</Text>
+          <Ionicons name="heart-outline" size={48} color={theme.border} />
+          <Text style={styles.emptyText}>Aucun événement en favori.</Text>
         </View>
       ) : (
         <FlatList
           data={events}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + Spacing.lg }]}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <Pressable
               onPress={() =>
@@ -74,92 +78,112 @@ export default function FavoritesScreen() {
                 })
               }
               style={({ pressed }) => [
-                styles.card,
-                pressed && styles.cardPressed,
+                styles.eventCard,
+                pressed && styles.eventCardPressed,
               ]}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <View style={styles.metaRow}>
-                <Ionicons name="heart-outline" size={15} color="#64748B" />
-                <Text style={styles.cardMeta}>{item.category}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.eventCategory}>{item.category}</Text>
+                <Ionicons name="heart" size={16} color={theme.error} />
+              </View>
+              <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
+              <View style={styles.cardFooter}>
+                <Ionicons name="location-outline" size={14} color={theme.textMuted} />
+                <Text style={styles.eventLocation} numberOfLines={1}>{item.locationName}</Text>
               </View>
             </Pressable>
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.light.background,
+  },
+  header: {
+    backgroundColor: Colors.light.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.light.text,
+  },
+  listContent: {
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  eventCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  eventCardPressed: {
+    backgroundColor: Colors.light.primaryLight,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  eventCategory: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.light.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  eventTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: Colors.light.text,
+    lineHeight: 22,
+    marginBottom: Spacing.sm,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  eventLocation: {
+    fontSize: 13,
+    color: Colors.light.textMuted,
   },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
-    gap: 8,
+    padding: Spacing.xl,
   },
-  muted: {
-    color: "#64748b",
+  errorText: {
     fontSize: 14,
-  },
-  error: {
-    color: "#EF4444",
-    fontSize: 14,
-    textAlign: "center",
+    color: Colors.light.error,
+    marginBottom: Spacing.md,
   },
   retryButton: {
-    marginTop: 8,
-    height: 38,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
-  retryText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0f172a",
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
-  listContent: {
-    padding: 16,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 16,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  cardMeta: {
-    color: "#64748b",
-    fontSize: 13,
-    flex: 1,
-  },
-  metaRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  emptyText: {
+    fontSize: 15,
+    color: Colors.light.textMuted,
+    marginTop: Spacing.sm,
   },
 });

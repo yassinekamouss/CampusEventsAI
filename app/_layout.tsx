@@ -2,6 +2,8 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 
 import { initDatabase, seedDatabaseIfEmpty } from "@/database/init";
 import { AuthProvider } from "@/store/AuthContext";
@@ -31,24 +33,27 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        {!isDbReady ? (
-          <View style={styles.container}>
-            <Text style={styles.text}>
-              {dbError ?? "CampusEvents AI - Chargement..."}
-            </Text>
-          </View>
-        ) : (
-          <Stack screenOptions={{ headerShown: false }} />
-        )}
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <StatusBar style="dark" />
+          {!isDbReady ? (
+            <View style={styles.center}>
+              <Text style={styles.text}>
+                {dbError ?? "CampusEvents AI - Chargement..."}
+              </Text>
+            </View>
+          ) : (
+            <Stack screenOptions={{ headerShown: false }} />
+          )}
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",

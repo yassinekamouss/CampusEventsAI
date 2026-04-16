@@ -1,57 +1,54 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Colors } from "@/constants/theme";
 import { useAuth } from "@/store/AuthContext";
 
 export default function StudentTabsLayout() {
-  const { userRole, isLoading, logout } = useAuth();
+  const { userRole, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+  const theme = Colors.light;
 
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={theme.primary} size="large" />
       </View>
     );
   }
 
   if (userRole !== "student") {
-    return <Redirect href="/" />;
+    return <Redirect href="/login" />;
   }
-
-  const onLogout = async () => {
-    await logout();
-  };
 
   return (
     <Tabs
       screenOptions={{
-        headerStyle: styles.header,
-        headerTitleStyle: styles.headerTitle,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: "#2563EB",
-        tabBarInactiveTintColor: "#64748B",
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={onLogout}
-            activeOpacity={0.85}
-            style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Se déconnecter</Text>
-          </TouchableOpacity>
-        ),
+        headerShown: false,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textMuted,
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopWidth: 1,
+          borderTopColor: theme.border,
+          height: 60 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 4,
+        },
+        tabBarLabelStyle: styles.tabBarLabel,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: "Catalogue",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+          title: "Événements",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "calendar" : "calendar-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -59,8 +56,12 @@ export default function StudentTabsLayout() {
         name="favorites"
         options={{
           title: "Favoris",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "heart" : "heart-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -68,24 +69,32 @@ export default function StudentTabsLayout() {
         name="registrations"
         options={{
           title: "Inscriptions",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-circle" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "ticket" : "ticket-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="assistant"
         options={{
-          title: "Assistant IA",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="sparkles" size={size} color={color} />
+          title: "Assistant",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "sparkles" : "sparkles-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="event/[id]"
         options={{
-          title: "Détail événement",
+          title: "Détail",
           href: null,
         }}
       />
@@ -98,33 +107,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.light.background,
   },
-  header: {
-    backgroundColor: "#f8fafc",
-  },
-  headerTitle: {
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  tabBar: {
-    backgroundColor: "#ffffff",
-    borderTopColor: "#e2e8f0",
-  },
-  logoutButton: {
-    marginRight: 16,
-    height: 34,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoutText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0f172a",
+  tabBarLabel: {
+    fontSize: 11,
+    fontWeight: "600",
   },
 });

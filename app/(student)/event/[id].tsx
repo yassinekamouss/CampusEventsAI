@@ -1,12 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -154,9 +155,9 @@ export default function StudentEventDetails() {
       ) : error && !event ? (
         <View style={styles.center}>
           <Text style={styles.error}>{error}</Text>
-          <Pressable onPress={load} style={styles.retryButton}>
+          <TouchableOpacity onPress={load} style={styles.retryButton}>
             <Text style={styles.retryText}>Réessayer</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       ) : event ? (
         <ScrollView contentContainerStyle={styles.content}>
@@ -187,33 +188,51 @@ export default function StudentEventDetails() {
               </Text>
             </View>
 
-            <Pressable
+            <TouchableOpacity
               onPress={onToggleFavorite}
-              style={({ pressed }) => [
-                styles.favoriteButton,
-                pressed && styles.favoriteButtonPressed,
-              ]}>
-              <Text style={styles.favoriteText}>
-                {isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-              </Text>
-            </Pressable>
+              activeOpacity={0.85}
+              style={styles.favoriteButton}>
+              <View style={styles.actionContent}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={18}
+                  color="#2563EB"
+                />
+                <Text style={styles.favoriteText}>
+                  {isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                </Text>
+              </View>
+            </TouchableOpacity>
 
-            <Pressable
+            <TouchableOpacity
               onPress={onToggleRegistration}
               disabled={!isRegistered && !canRegister}
-              style={({ pressed }) => [
+              activeOpacity={0.88}
+              style={[
                 styles.registerButton,
                 !isRegistered && !canRegister && styles.registerButtonDisabled,
-                pressed && styles.registerButtonPressed,
               ]}>
-              <Text
-                style={[
-                  styles.registerText,
-                  !isRegistered && !canRegister && styles.registerTextDisabled,
-                ]}>
-                {isRegistered ? "Se désinscrire" : "S'inscrire"}
-              </Text>
-            </Pressable>
+              <View style={styles.actionContent}>
+                <Ionicons
+                  name={
+                    isRegistered
+                      ? "close-circle-outline"
+                      : "checkmark-circle-outline"
+                  }
+                  size={20}
+                  color={!isRegistered && !canRegister ? "#64748B" : "#FFFFFF"}
+                />
+                <Text
+                  style={[
+                    styles.registerText,
+                    !isRegistered &&
+                      !canRegister &&
+                      styles.registerTextDisabled,
+                  ]}>
+                  {isRegistered ? "Se désinscrire" : "S'inscrire"}
+                </Text>
+              </View>
+            </TouchableOpacity>
 
             {error ? <Text style={styles.errorInline}>{error}</Text> : null}
             {!isRegistered && isPast ? (
@@ -240,18 +259,23 @@ export default function StudentEventDetails() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f5f9",
+    backgroundColor: "#F8FAFC",
   },
   content: {
     padding: 16,
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e6e9f0",
+    borderColor: "#E2E8F0",
     padding: 16,
     gap: 12,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 20,
+    elevation: 4,
   },
   title: {
     fontSize: 22,
@@ -262,10 +286,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     fontSize: 12,
     fontWeight: "700",
-    color: "#0f766e",
-    backgroundColor: "#e6fffa",
+    color: "#2563EB",
+    backgroundColor: "#DBEAFE",
     borderWidth: 1,
-    borderColor: "#99f6e4",
+    borderColor: "#BFDBFE",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -296,33 +320,32 @@ const styles = StyleSheet.create({
   favoriteButton: {
     marginTop: 4,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
-    backgroundColor: "#ffffff",
+    borderColor: "#BFDBFE",
+    backgroundColor: "#EFF6FF",
     alignItems: "center",
     justifyContent: "center",
-  },
-  favoriteButtonPressed: {
-    opacity: 0.85,
   },
   favoriteText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#2563EB",
+  },
+  actionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   registerButton: {
     height: 52,
-    borderRadius: 14,
-    backgroundColor: "#0f766e",
+    borderRadius: 8,
+    backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
   },
   registerButtonDisabled: {
-    backgroundColor: "#cbd5e1",
-  },
-  registerButtonPressed: {
-    opacity: 0.9,
+    backgroundColor: "#CBD5E1",
   },
   registerText: {
     fontSize: 16,
@@ -349,20 +372,20 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 14,
-    color: "#b91c1c",
+    color: "#EF4444",
     textAlign: "center",
   },
   errorInline: {
     fontSize: 13,
-    color: "#b91c1c",
+    color: "#EF4444",
   },
   retryButton: {
     marginTop: 8,
     height: 38,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",

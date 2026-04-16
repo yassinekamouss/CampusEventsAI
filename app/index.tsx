@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -110,7 +111,10 @@ export default function Index() {
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.buttonText}>Se connecter</Text>
+                  <View style={styles.buttonContent}>
+                    <Ionicons name="log-in-outline" size={18} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>Se connecter</Text>
+                  </View>
                 )}
               </TouchableOpacity>
             </View>
@@ -124,6 +128,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   safeArea: {
     flex: 1,
@@ -137,63 +142,73 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   header: {
-    marginBottom: Spacing.xl,
-    paddingHorizontal: Spacing.sm,
+    marginBottom: Spacing.lg,
+    paddingHorizontal: 4,
   },
   title: {
-    marginBottom: Spacing.sm,
+    marginBottom: 6,
+    color: "#0F172A",
   },
   subtitle: {
-    opacity: 0.7,
+    color: "#64748B",
   },
   card: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xl,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   cardElevated: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 6,
   },
   inputContainer: {
     marginBottom: Spacing.md,
   },
   label: {
-    marginBottom: 4,
+    marginBottom: 6,
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
+    color: "#0F172A",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#BFDBFE",
     borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    padding: 14,
+    backgroundColor: "#F1F5F9",
+    fontSize: 15,
+    color: "#0F172A",
   },
   errorText: {
-    color: "red",
+    color: "#EF4444",
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 6,
   },
   button: {
     marginTop: Spacing.md,
-    backgroundColor: "#0a7ea4",
+    backgroundColor: "#2563EB",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
 });

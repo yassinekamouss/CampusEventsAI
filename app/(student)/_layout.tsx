@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 import { useAuth } from "@/store/AuthContext";
 
@@ -17,41 +18,51 @@ export default function StudentTabsLayout() {
         headerStyle: styles.header,
         headerTitleStyle: styles.headerTitle,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: "#0f766e",
-        tabBarInactiveTintColor: "#64748b",
+        tabBarActiveTintColor: "#2563EB",
+        tabBarInactiveTintColor: "#64748B",
         headerRight: () => (
-          <Pressable
+          <TouchableOpacity
             onPress={onLogout}
-            style={({ pressed }) => [
-              styles.logoutButton,
-              pressed && styles.logoutPressed,
-            ]}>
+            activeOpacity={0.85}
+            style={styles.logoutButton}>
             <Text style={styles.logoutText}>Se déconnecter</Text>
-          </Pressable>
+          </TouchableOpacity>
         ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: "Catalogue",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: "Favoris",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="heart" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="registrations"
         options={{
           title: "Inscriptions",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkmark-circle" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="assistant"
         options={{
           title: "Assistant IA",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sparkles" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -81,15 +92,12 @@ const styles = StyleSheet.create({
     marginRight: 16,
     height: 34,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
-  },
-  logoutPressed: {
-    opacity: 0.8,
   },
   logoutText: {
     fontSize: 12,

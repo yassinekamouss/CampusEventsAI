@@ -1,6 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,6 +9,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,13 +36,13 @@ function formatDateTime(iso: string) {
 function categoryColors(category: string) {
   switch (category) {
     case "Workshop":
-      return { bg: "#e8fff2", fg: "#0f7a3d", border: "#bff1d2" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     case "Talk":
-      return { bg: "#f1e9ff", fg: "#5b21b6", border: "#dccbff" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     case "Club":
-      return { bg: "#e8f4ff", fg: "#075985", border: "#cbe6ff" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     default:
-      return { bg: "#f3f4f6", fg: "#374151", border: "#e5e7eb" };
+      return { bg: "#EFF6FF", fg: "#2563EB", border: "#DBEAFE" };
   }
 }
 
@@ -103,28 +105,22 @@ export default function AdminIndex() {
     router.replace("/");
   };
 
-  const headerRight = useMemo(() => {
-    return (
-      <View style={styles.headerActions}>
-        <Pressable
-          onPress={onCreate}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            pressed && styles.primaryButtonPressed,
-          ]}>
-          <Text style={styles.primaryButtonText}>+ Créer</Text>
-        </Pressable>
-        <Pressable
-          onPress={onLogout}
-          style={({ pressed }) => [
-            styles.ghostButton,
-            pressed && styles.ghostButtonPressed,
-          ]}>
-          <Text style={styles.ghostButtonText}>Déconnexion</Text>
-        </Pressable>
-      </View>
-    );
-  }, [onCreate, onLogout]);
+  const headerRight = (
+    <View style={styles.headerActions}>
+      <TouchableOpacity
+        onPress={onCreate}
+        activeOpacity={0.85}
+        style={styles.primaryButton}>
+        <Text style={styles.primaryButtonText}>+ Créer</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onLogout}
+        activeOpacity={0.85}
+        style={styles.ghostButton}>
+        <Text style={styles.ghostButtonText}>Déconnexion</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -196,33 +192,34 @@ export default function AdminIndex() {
                   </View>
                 </View>
 
-                <Text style={styles.meta} numberOfLines={2}>
-                  {formatDateTime(item.startDateTime)}
-                  {"  •  "}
-                  {item.locationName}
-                </Text>
+                <View style={styles.metaRow}>
+                  <Ionicons name="time-outline" size={15} color="#64748B" />
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {formatDateTime(item.startDateTime)}
+                  </Text>
+                </View>
+
+                <View style={styles.metaRow}>
+                  <Ionicons name="location-outline" size={15} color="#64748B" />
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {item.locationName}
+                  </Text>
+                </View>
 
                 <View style={styles.rowActions}>
-                  <Pressable
+                  <TouchableOpacity
                     onPress={() => onEdit(item.id)}
-                    style={({ pressed }) => [
-                      styles.smallButton,
-                      pressed && styles.smallButtonPressed,
-                    ]}>
-                    <Text style={styles.smallButtonText}>Modifier</Text>
-                  </Pressable>
+                    activeOpacity={0.85}
+                    style={styles.smallButton}>
+                    <Ionicons name="create-outline" size={22} color="#2563EB" />
+                  </TouchableOpacity>
 
-                  <Pressable
+                  <TouchableOpacity
                     onPress={() => onDelete(item.id)}
-                    style={({ pressed }) => [
-                      styles.smallButton,
-                      styles.dangerButton,
-                      pressed && styles.smallButtonPressed,
-                    ]}>
-                    <Text style={[styles.smallButtonText, styles.dangerText]}>
-                      Supprimer
-                    </Text>
-                  </Pressable>
+                    activeOpacity={0.85}
+                    style={[styles.smallButton, styles.dangerButton]}>
+                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                  </TouchableOpacity>
                 </View>
               </View>
             );
@@ -236,15 +233,15 @@ export default function AdminIndex() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f5f9",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#f3f5f9",
+    borderBottomColor: "#E2E8F0",
+    backgroundColor: "#F8FAFC",
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
@@ -260,12 +257,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0b1220",
+    color: "#0F172A",
     letterSpacing: 0.2,
   },
   subtitle: {
     fontSize: 13,
-    color: "#4b5563",
+    color: "#64748B",
   },
   listContent: {
     padding: 16,
@@ -273,16 +270,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#e6e9f0",
-    shadowColor: "#0b1220",
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 2,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
   cardTop: {
     flexDirection: "row",
@@ -293,13 +290,19 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: "800",
-    color: "#0b1220",
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  metaRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   meta: {
-    marginTop: 8,
     fontSize: 13,
-    color: "#374151",
+    color: "#64748B",
+    flex: 1,
   },
   badge: {
     borderWidth: 1,
@@ -320,33 +323,22 @@ const styles = StyleSheet.create({
   smallButton: {
     flex: 1,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
-    backgroundColor: "#f6f7fb",
+    borderColor: "#BFDBFE",
+    backgroundColor: "#EFF6FF",
     alignItems: "center",
     justifyContent: "center",
   },
   dangerButton: {
-    backgroundColor: "#fff1f2",
-    borderColor: "#fecdd3",
-  },
-  smallButtonPressed: {
-    opacity: 0.9,
-  },
-  smallButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0b1220",
-  },
-  dangerText: {
-    color: "#b91c1c",
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
   },
   primaryButton: {
     height: 38,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: "#0056b3",
+    borderRadius: 8,
+    backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -354,8 +346,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     height: 44,
     paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: "#0056b3",
+    borderRadius: 8,
+    backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -370,18 +362,15 @@ const styles = StyleSheet.create({
   ghostButton: {
     height: 38,
     paddingHorizontal: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
   },
-  ghostButtonPressed: {
-    opacity: 0.9,
-  },
   ghostButtonText: {
-    color: "#111827",
+    color: "#0F172A",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -395,26 +384,26 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#0b1220",
+    color: "#0F172A",
     textAlign: "center",
   },
   muted: {
     fontSize: 13,
-    color: "#4b5563",
+    color: "#64748B",
     textAlign: "center",
   },
   error: {
     fontSize: 13,
-    color: "#b91c1c",
+    color: "#EF4444",
     textAlign: "center",
   },
   retryButton: {
     height: 40,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
   },

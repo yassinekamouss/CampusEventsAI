@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -226,252 +227,260 @@ export default function CreateOrEditEvent() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}> 
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={styles.topbar}>
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.backBtn,
-            pressed && styles.backBtnPressed,
-          ]}>
-          <Text style={styles.backText}>Retour</Text>
-        </Pressable>
-
-        <Text style={styles.topTitle}>
-          {isEdit ? "Modifier" : "Créer"} un événement
-        </Text>
-
-        <View style={{ width: 72 }} />
-      </View>
-
-      {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator />
-          <Text style={styles.muted}>Chargement…</Text>
-        </View>
-      ) : loadError ? (
-        <View style={styles.center}>
-          <Text style={styles.error}>{loadError}</Text>
-        </View>
-      ) : (
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.content}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Titre *</Text>
-            <TextInput
-              value={title}
-              onChangeText={(v) => {
-                touch("title");
-                setTitle(v);
-              }}
-              style={styles.input}
-              placeholder="Ex: Workshop React Native"
-            />
-            {show("title") ? (
-              <Text style={styles.error}>{show("title")}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              value={description}
-              onChangeText={(v) => {
-                touch("description");
-                setDescription(v);
-              }}
-              style={[styles.input, styles.textarea]}
-              placeholder="Décrivez l'événement..."
-              multiline
-            />
-            {show("description") ? (
-              <Text style={styles.error}>{show("description")}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Catégorie *</Text>
-            <View style={styles.categoryRow}>
-              {(["Workshop", "Talk", "Club"] as const).map((c) => {
-                const colors = categoryColors(c);
-                const selected = category === c;
-                return (
-                  <Pressable
-                    key={c}
-                    onPress={() => {
-                      touch("category");
-                      setCategory(c);
-                    }}
-                    style={({ pressed }) => [
-                      styles.categoryPill,
-                      {
-                        backgroundColor: selected ? colors.bg : "#ffffff",
-                        borderColor: selected ? colors.border : "#dbe2ee",
-                      },
-                      pressed && styles.pressed,
-                    ]}>
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        { color: selected ? colors.fg : "#111827" },
-                      ]}>
-                      {c}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {show("category") ? (
-              <Text style={styles.error}>{show("category")}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.grid2}>
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Début (ISO) *</Text>
-              <TextInput
-                value={startDateTime}
-                onChangeText={(v) => {
-                  touch("startDateTime");
-                  setStartDateTime(v);
-                }}
-                style={styles.input}
-                placeholder="2026-04-30T14:00:00.000Z"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {show("startDateTime") ? (
-                <Text style={styles.error}>{show("startDateTime")}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Fin (ISO)</Text>
-              <TextInput
-                value={endDateTime}
-                onChangeText={(v) => {
-                  touch("endDateTime");
-                  setEndDateTime(v);
-                }}
-                style={styles.input}
-                placeholder="Optionnel"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {show("endDateTime") ? (
-                <Text style={styles.error}>{show("endDateTime")}</Text>
-              ) : null}
-            </View>
-          </View>
-
-          <View style={styles.grid2}>
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Lieu *</Text>
-              <TextInput
-                value={locationName}
-                onChangeText={(v) => {
-                  touch("locationName");
-                  setLocationName(v);
-                }}
-                style={styles.input}
-                placeholder="Ex: Amphi A"
-              />
-              {show("locationName") ? (
-                <Text style={styles.error}>{show("locationName")}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Adresse</Text>
-              <TextInput
-                value={locationAddress}
-                onChangeText={(v) => {
-                  touch("locationAddress");
-                  setLocationAddress(v);
-                }}
-                style={styles.input}
-                placeholder="Optionnel"
-              />
-            </View>
-          </View>
-
-          <View style={styles.grid2}>
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Organisateur *</Text>
-              <TextInput
-                value={organizerName}
-                onChangeText={(v) => {
-                  touch("organizerName");
-                  setOrganizerName(v);
-                }}
-                style={styles.input}
-                placeholder="Ex: Département Informatique"
-              />
-              {show("organizerName") ? (
-                <Text style={styles.error}>{show("organizerName")}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.field, { flex: 1 }]}>
-              <Text style={styles.label}>Capacité</Text>
-              <TextInput
-                value={capacity}
-                onChangeText={(v) => {
-                  touch("capacity");
-                  setCapacity(v);
-                }}
-                style={styles.input}
-                placeholder="Ex: 40"
-                keyboardType="number-pad"
-              />
-              {show("capacity") ? (
-                <Text style={styles.error}>{show("capacity")}</Text>
-              ) : null}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Tags</Text>
-            <TextInput
-              value={tags}
-              onChangeText={(v) => {
-                touch("tags");
-                setTags(v);
-              }}
-              style={styles.input}
-              placeholder="Ex: react, mobile, expo"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Text style={styles.hint}>Séparez les tags par des virgules.</Text>
-          </View>
-
+    <SafeAreaView style={styles.screen}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={styles.topbar}>
           <Pressable
-            onPress={onSave}
-            disabled={!canSave}
+            onPress={() => router.back()}
             style={({ pressed }) => [
-              styles.saveBtn,
-              !canSave && styles.saveBtnDisabled,
-              pressed && canSave && styles.saveBtnPressed,
+              styles.backBtn,
+              pressed && styles.backBtnPressed,
             ]}>
-            {isSaving ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.saveText}>Enregistrer</Text>
-            )}
+            <View style={styles.backInner}>
+              <Ionicons name="arrow-back-outline" size={16} color="#0F172A" />
+              <Text style={styles.backText}>Retour</Text>
+            </View>
           </Pressable>
 
-          {!validation.isValid && submitAttempted ? (
-            <Text style={styles.footerError}>
-              Corrigez les champs en erreur avant d'enregistrer.
-            </Text>
-          ) : null}
-        </ScrollView>
-      )}
-    </KeyboardAvoidingView>
+          <Text style={styles.topTitle}>
+            {isEdit ? "Modifier" : "Créer"} un événement
+          </Text>
+
+          <View style={{ width: 72 }} />
+        </View>
+
+        {isLoading ? (
+          <View style={styles.center}>
+            <ActivityIndicator />
+            <Text style={styles.muted}>Chargement…</Text>
+          </View>
+        ) : loadError ? (
+          <View style={styles.center}>
+            <Text style={styles.error}>{loadError}</Text>
+          </View>
+        ) : (
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.content}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Titre *</Text>
+              <TextInput
+                value={title}
+                onChangeText={(v) => {
+                  touch("title");
+                  setTitle(v);
+                }}
+                style={styles.input}
+                placeholder="Ex: Workshop React Native"
+              />
+              {show("title") ? (
+                <Text style={styles.error}>{show("title")}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Description *</Text>
+              <TextInput
+                value={description}
+                onChangeText={(v) => {
+                  touch("description");
+                  setDescription(v);
+                }}
+                style={[styles.input, styles.textarea]}
+                placeholder="Décrivez l'événement..."
+                multiline
+              />
+              {show("description") ? (
+                <Text style={styles.error}>{show("description")}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Catégorie *</Text>
+              <View style={styles.categoryRow}>
+                {(["Workshop", "Talk", "Club"] as const).map((c) => {
+                  const colors = categoryColors(c);
+                  const selected = category === c;
+                  return (
+                    <Pressable
+                      key={c}
+                      onPress={() => {
+                        touch("category");
+                        setCategory(c);
+                      }}
+                      style={({ pressed }) => [
+                        styles.categoryPill,
+                        {
+                          backgroundColor: selected ? colors.bg : "#ffffff",
+                          borderColor: selected ? colors.border : "#dbe2ee",
+                        },
+                        pressed && styles.pressed,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.categoryText,
+                          { color: selected ? colors.fg : "#111827" },
+                        ]}>
+                        {c}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {show("category") ? (
+                <Text style={styles.error}>{show("category")}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.grid2}>
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Début (ISO) *</Text>
+                <TextInput
+                  value={startDateTime}
+                  onChangeText={(v) => {
+                    touch("startDateTime");
+                    setStartDateTime(v);
+                  }}
+                  style={styles.input}
+                  placeholder="2026-04-30T14:00:00.000Z"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {show("startDateTime") ? (
+                  <Text style={styles.error}>{show("startDateTime")}</Text>
+                ) : null}
+              </View>
+
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Fin (ISO)</Text>
+                <TextInput
+                  value={endDateTime}
+                  onChangeText={(v) => {
+                    touch("endDateTime");
+                    setEndDateTime(v);
+                  }}
+                  style={styles.input}
+                  placeholder="Optionnel"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {show("endDateTime") ? (
+                  <Text style={styles.error}>{show("endDateTime")}</Text>
+                ) : null}
+              </View>
+            </View>
+
+            <View style={styles.grid2}>
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Lieu *</Text>
+                <TextInput
+                  value={locationName}
+                  onChangeText={(v) => {
+                    touch("locationName");
+                    setLocationName(v);
+                  }}
+                  style={styles.input}
+                  placeholder="Ex: Amphi A"
+                />
+                {show("locationName") ? (
+                  <Text style={styles.error}>{show("locationName")}</Text>
+                ) : null}
+              </View>
+
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Adresse</Text>
+                <TextInput
+                  value={locationAddress}
+                  onChangeText={(v) => {
+                    touch("locationAddress");
+                    setLocationAddress(v);
+                  }}
+                  style={styles.input}
+                  placeholder="Optionnel"
+                />
+              </View>
+            </View>
+
+            <View style={styles.grid2}>
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Organisateur *</Text>
+                <TextInput
+                  value={organizerName}
+                  onChangeText={(v) => {
+                    touch("organizerName");
+                    setOrganizerName(v);
+                  }}
+                  style={styles.input}
+                  placeholder="Ex: Département Informatique"
+                />
+                {show("organizerName") ? (
+                  <Text style={styles.error}>{show("organizerName")}</Text>
+                ) : null}
+              </View>
+
+              <View style={[styles.field, { flex: 1 }]}>
+                <Text style={styles.label}>Capacité</Text>
+                <TextInput
+                  value={capacity}
+                  onChangeText={(v) => {
+                    touch("capacity");
+                    setCapacity(v);
+                  }}
+                  style={styles.input}
+                  placeholder="Ex: 40"
+                  keyboardType="number-pad"
+                />
+                {show("capacity") ? (
+                  <Text style={styles.error}>{show("capacity")}</Text>
+                ) : null}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Tags</Text>
+              <TextInput
+                value={tags}
+                onChangeText={(v) => {
+                  touch("tags");
+                  setTags(v);
+                }}
+                style={styles.input}
+                placeholder="Ex: react, mobile, expo"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Text style={styles.hint}>
+                Séparez les tags par des virgules.
+              </Text>
+            </View>
+
+            <Pressable
+              onPress={onSave}
+              disabled={!canSave}
+              style={({ pressed }) => [
+                styles.saveBtn,
+                !canSave && styles.saveBtnDisabled,
+                pressed && canSave && styles.saveBtnPressed,
+              ]}>
+              {isSaving ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <View style={styles.saveInner}>
+                  <Ionicons name="save-outline" size={18} color="#FFFFFF" />
+                  <Text style={styles.saveText}>Enregistrer</Text>
+                </View>
+              )}
+            </Pressable>
+
+            {!validation.isValid && submitAttempted ? (
+              <Text style={styles.footerError}>
+                Corrigez les champs en erreur avant d&apos;enregistrer.
+              </Text>
+            ) : null}
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -479,15 +488,15 @@ export default function CreateOrEditEvent() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f5f9",
+    backgroundColor: "#F8FAFC",
   },
   topbar: {
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#f3f5f9",
+    borderBottomColor: "#E2E8F0",
+    backgroundColor: "#F8FAFC",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -495,17 +504,22 @@ const styles = StyleSheet.create({
   topTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0b1220",
+    color: "#0F172A",
   },
   backBtn: {
     height: 34,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  backInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   backBtnPressed: {
     opacity: 0.9,
@@ -513,7 +527,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: "#0F172A",
   },
   content: {
     padding: 16,
@@ -526,17 +540,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: "#0F172A",
   },
   input: {
-    backgroundColor: "#eef2f7",
+    backgroundColor: "#F1F5F9",
     borderWidth: 1,
-    borderColor: "#dbe2ee",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: "#BFDBFE",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     fontSize: 15,
-    color: "#0b1220",
+    color: "#0F172A",
   },
   textarea: {
     minHeight: 110,
@@ -544,15 +558,15 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: "#6b7280",
+    color: "#64748B",
   },
   error: {
     fontSize: 12,
-    color: "#b91c1c",
+    color: "#EF4444",
   },
   footerError: {
     fontSize: 12,
-    color: "#b91c1c",
+    color: "#EF4444",
     textAlign: "center",
     marginTop: 4,
   },
@@ -567,7 +581,7 @@ const styles = StyleSheet.create({
   categoryPill: {
     flex: 1,
     height: 42,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -582,10 +596,15 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginTop: 8,
     height: 46,
-    borderRadius: 14,
-    backgroundColor: "#0056b3",
+    borderRadius: 8,
+    backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
+  },
+  saveInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   saveBtnPressed: {
     opacity: 0.92,
@@ -607,7 +626,7 @@ const styles = StyleSheet.create({
   },
   muted: {
     fontSize: 13,
-    color: "#4b5563",
+    color: "#64748B",
     textAlign: "center",
   },
 });

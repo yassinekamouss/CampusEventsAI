@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
@@ -77,7 +78,10 @@ export default function FavoritesScreen() {
                 pressed && styles.cardPressed,
               ]}>
               <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardMeta}>{item.category}</Text>
+              <View style={styles.metaRow}>
+                <Ionicons name="heart-outline" size={15} color="#64748B" />
+                <Text style={styles.cardMeta}>{item.category}</Text>
+              </View>
             </Pressable>
           )}
         />
@@ -89,7 +93,7 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f5f9",
+    backgroundColor: "#F8FAFC",
   },
   center: {
     flex: 1,
@@ -103,7 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   error: {
-    color: "#b91c1c",
+    color: "#EF4444",
     fontSize: 14,
     textAlign: "center",
   },
@@ -111,9 +115,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     height: 38,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
@@ -131,8 +135,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e6e9f0",
+    borderColor: "#E2E8F0",
     padding: 16,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 18,
+    elevation: 3,
   },
   cardPressed: {
     opacity: 0.9,
@@ -143,8 +152,14 @@ const styles = StyleSheet.create({
     color: "#0f172a",
   },
   cardMeta: {
-    marginTop: 6,
     color: "#64748b",
     fontSize: 13,
+    flex: 1,
+  },
+  metaRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });

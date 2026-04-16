@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -43,13 +44,13 @@ function formatDateTime(iso: string) {
 function categoryColors(category: string) {
   switch (category) {
     case "Workshop":
-      return { bg: "#e8fff2", fg: "#0f7a3d", border: "#bff1d2" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     case "Talk":
-      return { bg: "#f1e9ff", fg: "#5b21b6", border: "#dccbff" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     case "Club":
-      return { bg: "#e8f4ff", fg: "#075985", border: "#cbe6ff" };
+      return { bg: "#DBEAFE", fg: "#2563EB", border: "#BFDBFE" };
     default:
-      return { bg: "#f3f4f6", fg: "#374151", border: "#e5e7eb" };
+      return { bg: "#EFF6FF", fg: "#2563EB", border: "#DBEAFE" };
   }
 }
 
@@ -195,11 +196,19 @@ export default function StudentIndex() {
                   </View>
                 </View>
 
-                <Text style={styles.meta} numberOfLines={2}>
-                  {formatDateTime(item.startDateTime)}
-                  {"  •  "}
-                  {item.locationName}
-                </Text>
+                <View style={styles.metaRow}>
+                  <Ionicons name="time-outline" size={15} color="#64748B" />
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {formatDateTime(item.startDateTime)}
+                  </Text>
+                </View>
+
+                <View style={styles.metaRow}>
+                  <Ionicons name="location-outline" size={15} color="#64748B" />
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {item.locationName}
+                  </Text>
+                </View>
 
                 <Text style={styles.linkLabel}>Voir les détails</Text>
               </Pressable>
@@ -214,30 +223,30 @@ export default function StudentIndex() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f5f9",
+    backgroundColor: "#F8FAFC",
   },
   headerBlock: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#dbe2ee",
+    borderBottomColor: "#E2E8F0",
     gap: 10,
   },
   title: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#0f172a",
+    color: "#0F172A",
   },
   searchInput: {
     height: 44,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
-    borderRadius: 12,
+    borderColor: "#BFDBFE",
+    borderRadius: 8,
     paddingHorizontal: 14,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F1F5F9",
     fontSize: 14,
-    color: "#0f172a",
+    color: "#0F172A",
   },
   chipsRow: {
     gap: 8,
@@ -246,16 +255,16 @@ const styles = StyleSheet.create({
   chip: {
     height: 34,
     paddingHorizontal: 12,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
   },
   chipSelected: {
-    borderColor: "#0f766e",
-    backgroundColor: "#e6fffa",
+    borderColor: "#2563EB",
+    backgroundColor: "#DBEAFE",
   },
   chipPressed: {
     opacity: 0.8,
@@ -263,10 +272,10 @@ const styles = StyleSheet.create({
   chipLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: "#64748B",
   },
   chipLabelSelected: {
-    color: "#0f766e",
+    color: "#2563EB",
   },
   listContent: {
     padding: 16,
@@ -274,11 +283,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#e6e9f0",
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.07,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 22,
+    elevation: 4,
   },
   cardPressed: {
     opacity: 0.9,
@@ -292,19 +306,25 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: "800",
-    color: "#0b1220",
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  metaRow: {
+    marginTop: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   meta: {
-    marginTop: 8,
     fontSize: 13,
-    color: "#374151",
+    color: "#64748B",
+    flex: 1,
   },
   linkLabel: {
     marginTop: 10,
     fontSize: 13,
     fontWeight: "700",
-    color: "#0f766e",
+    color: "#2563EB",
   },
   badge: {
     borderWidth: 1,
@@ -327,26 +347,26 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#0b1220",
+    color: "#0F172A",
     textAlign: "center",
   },
   muted: {
     fontSize: 13,
-    color: "#4b5563",
+    color: "#64748B",
     textAlign: "center",
   },
   error: {
     fontSize: 13,
-    color: "#b91c1c",
+    color: "#EF4444",
     textAlign: "center",
   },
   retryButton: {
     height: 40,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#dbe2ee",
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -356,6 +376,6 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: "#0F172A",
   },
 });

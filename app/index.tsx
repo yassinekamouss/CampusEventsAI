@@ -4,14 +4,24 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/store/AuthContext";
+
+const Spacing = {
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+};
 
 export default function Index() {
   const { userRole, isLoading, login } = useAuth();
@@ -45,132 +55,145 @@ export default function Index() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={styles.card}>
-        <Text style={styles.title}>CampusEvents AI</Text>
-        <Text style={styles.subtitle}>Connexion</Text>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <ThemedText type="title" style={styles.title}>
+                CampusEvents
+              </ThemedText>
+              <ThemedText type="default" style={styles.subtitle}>
+                Welcome back. Please enter your details.
+              </ThemedText>
+            </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="ex: admin@campus.ma"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            style={styles.input}
-          />
-        </View>
+            <View style={[styles.card, styles.cardElevated]}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="admin@campus.ma"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="emailAddress"
+                />
+              </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Mot de passe</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Votre mot de passe"
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="password"
-            style={styles.input}
-          />
-        </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Mot de passe</Text>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Votre mot de passe"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                />
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <Pressable
-          onPress={onSubmit}
-          disabled={!canSubmit}
-          style={({ pressed }) => [
-            styles.button,
-            !canSubmit && styles.buttonDisabled,
-            pressed && canSubmit && styles.buttonPressed,
-          ]}>
-          {isLoading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Se connecter</Text>
-          )}
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+              <TouchableOpacity
+                onPress={onSubmit}
+                disabled={!canSubmit || isLoading}
+                style={[
+                  styles.button,
+                  (!canSubmit || isLoading) && styles.buttonDisabled,
+                ]}>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Se connecter</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    backgroundColor: "#ffffff",
   },
-  card: {
-    width: "100%",
-    maxWidth: 420,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    padding: 18,
-    backgroundColor: "#ffffff",
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  header: {
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.sm,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#374151",
-    textAlign: "center",
-    marginTop: 4,
-    marginBottom: 12,
+    opacity: 0.7,
   },
-  field: {
-    marginTop: 12,
+  card: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  cardElevated: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputContainer: {
+    marginBottom: Spacing.md,
   },
   label: {
-    fontSize: 13,
-    color: "#111827",
-    marginBottom: 6,
+    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: "#111827",
-    backgroundColor: "#ffffff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
   errorText: {
-    marginTop: 10,
-    color: "#b91c1c",
-    fontSize: 13,
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
   button: {
-    marginTop: 14,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: "#0056b3",
+    marginTop: Spacing.md,
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonPressed: {
-    opacity: 0.9,
-  },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   buttonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "600",
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

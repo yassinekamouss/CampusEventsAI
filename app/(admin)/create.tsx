@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { addEvent, getEventById, updateEvent } from "@/database/events";
 
@@ -225,8 +226,8 @@ export default function CreateOrEditEvent() {
   };
 
   return (
+    <SafeAreaView style={styles.screen}> 
     <KeyboardAvoidingView
-      style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.topbar}>
         <Pressable
@@ -471,6 +472,7 @@ export default function CreateOrEditEvent() {
         </ScrollView>
       )}
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

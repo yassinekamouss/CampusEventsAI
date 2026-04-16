@@ -6,11 +6,11 @@ import {
   Alert,
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { deleteEvent, EventRow, getAllEvents } from "@/database/events";
 import { useAuth } from "@/store/AuthContext";

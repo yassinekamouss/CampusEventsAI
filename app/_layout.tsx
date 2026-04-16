@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { initDatabase, seedDatabaseIfEmpty } from "@/database/init";
 import { AuthProvider } from "@/store/AuthContext";
@@ -29,20 +30,20 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (!isDbReady) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>
-          {dbError ?? "CampusEvents AI - Chargement..."}
-        </Text>
-      </View>
-    );
-  }
-
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        {!isDbReady ? (
+          <View style={styles.container}>
+            <Text style={styles.text}>
+              {dbError ?? "CampusEvents AI - Chargement..."}
+            </Text>
+          </View>
+        ) : (
+          <Stack screenOptions={{ headerShown: false }} />
+        )}
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -1,15 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Redirect, Tabs } from "expo-router";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useAuth } from "@/store/AuthContext";
 
 export default function StudentTabsLayout() {
-  const { logout } = useAuth();
+  const { userRole, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (userRole !== "student") {
+    return <Redirect href="/" />;
+  }
 
   const onLogout = async () => {
     await logout();
-    router.replace("/");
   };
 
   return (
@@ -77,6 +88,12 @@ export default function StudentTabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+  },
   header: {
     backgroundColor: "#f8fafc",
   },

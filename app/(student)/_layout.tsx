@@ -1,6 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { useAuth } from "@/store/AuthContext";
 

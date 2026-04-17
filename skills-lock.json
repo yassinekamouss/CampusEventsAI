@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "LaTeX Documents": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "8640e7ba18836e257532cc7f41015fd82a1aea3181fa366b88453e109575a536"
+    },
+    "plantuml": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "f836ea8e23db32f89c472b0efbdfc9c1327f64258954d1a0c01c27646f1c349b"
+    }
+  }
+}
